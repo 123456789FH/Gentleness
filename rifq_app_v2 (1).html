@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تطبيق الرفق | للمرحلة الابتدائية وأولياء الأمور</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#0ea5e9;   /* sky-500 */
+      --ink:#0f172a;     /* slate-900 */
+      --soft:#f1f5f9;    /* slate-100 */
+      --accent:#22c55e;  /* green-500 */
+      --warn:#f59e0b;    /* amber-500 */
+      --danger:#ef4444;  /* red-500 */
+    }
+    body{font-family:"Cairo","Tajawal",system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background:linear-gradient(180deg,#f8fafc, #ecfeff) fixed; color:var(--ink)}
+    .tab-btn[aria-selected="true"]{background:var(--brand); color:white}
+    .badge{border:2px dashed #38bdf8; border-radius:14px; padding:4px 10px; font-size:.85rem}
+    .card{background:white; border-radius:18px; box-shadow:0 10px 30px rgba(2,132,199,.12); border:1px solid #e2e8f0}
+    .kleecha{background:linear-gradient(90deg,#0284c7, #22d3ee); color:#fff; border-radius:18px}
+    .kleecha small{opacity:.9}
+    .pill{border:1px solid #cbd5e1; border-radius:999px; padding:.35rem .75rem; display:inline-flex; gap:.5rem; align-items:center}
+    .print-hint{font-size:.8rem; color:#475569}
+    .ribbon{position:absolute; top:12px; left:12px; background:#10b981; color:#fff; padding:2px 10px; border-radius:999px; font-size:.75rem}
+    .stamp{border:3px solid var(--brand); border-radius:999px; padding:.25rem .75rem; display:inline-block; transform: rotate(-6deg); opacity:.9}
+    @media print{
+      .no-print{display:none !important;}
+      body{background:white;}
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <!-- Header / Kleecha -->
+  <header class="kleecha mx-auto max-w-6xl mt-6 p-4 md:p-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <img id="leftLogo" src="" alt="شعار" class="w-14 h-14 rounded-xl bg-white/20 p-1 object-contain hidden">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">تطبيق الرفق • ابتدائي</h1>
+          <p class="text-sm md:text-base mt-1"><small>برنامج تفاعلي لغرس قيمة الرفق لدى الطالبات، مع مساحة خاصة للأسرة.</small></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 md:gap-3">
+        <div class="text-right hidden md:block">
+          <div id="schoolTop" class="font-semibold"></div>
+          <div id="districtTop" class="text-sm opacity-90"></div>
+          <div id="ministryTop" class="text-xs opacity-80"></div>
+        </div>
+        <img id="rightLogo" src="" alt="شعار" class="w-14 h-14 rounded-xl bg-white/20 p-1 object-contain hidden">
+      </div>
+    </div>
+  </header>
+
+  <!-- Quick Controls -->
+  <section class="mx-auto max-w-6xl mt-4 px-3 md:px-0">
+    <div class="card p-4 md:p-5">
+      <div class="flex flex-wrap gap-2 items-center">
+        <button class="pill no-print" onclick="toggleDark()">
+          <span id="darkIcon">🌙</span><span>الوضع الداكن</span>
+        </button>
+        <button class="pill no-print" onclick="speak('الرفق خلقٌ عظيم. إن الله رفيق يحب الرفق في الأمر كله.');">
+          🔊 <span>قراءة تعريف قصيرة</span>
+        </button>
+        <button class="pill no-print" onclick="saveProgress(true)">💾 <span>حفظ التقدّم</span></button>
+        <button class="pill no-print" onclick="resetProgress()">🗑️ <span>إعادة التعيين</span></button>
+        <button class="pill no-print" onclick="shareURL()">🔗 <span>مشاركة الرابط</span></button>
+        <span class="badge">بدون كلمة مرور • تخزين محلي</span>
+      </div>
+      <div class="mt-3 text-sm print-hint">نصيحة: ارفعي شعار المدرسة واملئي الترويسة (الوزارة/الإدارة/المدرسة) لتظهر في الشهادات وخطط الطباعة.</div>
+    </div>
+  </section>
+
+  <!-- Identity / Kleecha editor -->
+  <section class="mx-auto max-w-6xl mt-3 px-3 md:px-0">
+    <div class="card p-4">
+      <h2 class="text-lg md:text-xl font-bold mb-3">الترويسة (كليشة) المدرسية</h2>
+      <div class="grid md:grid-cols-4 gap-3 items-end">
+        <div>
+          <label class="text-sm text-slate-600">وزارة التعليم / الشعار الأيمن (رابط صورة)</label>
+          <input id="rightLogoUrl" type="url" placeholder="https://example.com/logo.png" class="w-full border rounded-lg p-2">
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">شعار آخر (الأيسر - اختياري)</label>
+          <input id="leftLogoUrl" type="url" placeholder="https://example.com/logo2.png" class="w-full border rounded-lg p-2">
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">اسم المدرسة</label>
+          <input id="schoolName" type="text" placeholder="الابتدائية ..." class="w-full border rounded-lg p-2">
+        </div>
+        <div>
+          <label class="text-sm text-slate-600">الإدارة / مكتب التعليم</label>
+          <input id="districtName" type="text" placeholder="إدارة تعليم ..." class="w-full border rounded-lg p-2">
+        </div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-3 mt-3">
+        <div>
+          <label class="text-sm text-slate-600">وزارة / جهة</label>
+          <input id="ministryName" type="text" placeholder="وزارة التعليم" class="w-full border rounded-lg p-2">
+        </div>
+        <div class="md:col-span-2 flex items-center gap-2">
+          <button class="pill no-print" onclick="applyKleecha()">✅ تطبيق على الترويسة</button>
+          <span class="text-sm text-slate-600">ستظهر هذه البيانات في الشهادات والملفات المطبوعة.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <nav class="mx-auto max-w-6xl mt-4 px-3 md:px-0">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <button class="tab-btn card p-3 font-bold" aria-selected="true" onclick="switchTab('students', this)">للـطالبات</button>
+      <button class="tab-btn card p-3 font-bold" onclick="switchTab('parents', this)">للأسرة</button>
+      <button class="tab-btn card p-3 font-bold" onclick="switchTab('certificate', this)">شهادة الرفق</button>
+      <button class="tab-btn card p-3 font-bold" onclick="switchTab('progress', this)">لوحة التقدّم</button>
+    </div>
+  </nav>
+
+  <!-- Students tab -->
+  <section id="tab-students" class="mx-auto max-w-6xl mt-4 px-3 md:px-0">
+    <div class="grid md:grid-cols-3 gap-4">
+      <!-- 1. تعريف ولطائف -->
+      <div class="card p-4 relative">
+        <div class="ribbon">محتوى قصير</div>
+        <h3 class="text-lg font-bold mb-2">ما هو الرفق؟</h3>
+        <p class="text-slate-700 leading-7">
+          الرفق هو اللين واللطف في القول والعمل، وهو خلقٌ يُشعر من حولنا بالأمان. قالت عائشة رضي الله عنها: قال رسول الله ﷺ:
+          <span class="font-semibold">«إِنَّ اللَّهَ رَفِيقٌ يُحِبُّ الرِّفْقَ فِي الأَمْرِ كُلِّهِ»</span>.
+        </p>
+        <div class="mt-3 flex gap-2">
+          <button class="pill" onclick="speak('إن الله رفيق يحب الرفق في الأمر كله')">🔊 استمعي للحديث</button>
+          <button class="pill" onclick="mark('intro')">✔️ تم الفهم</button>
+        </div>
+        <div class="mt-2 text-sm text-emerald-700" id="introStatus"></div>
+      </div>
+
+      <!-- 2. مواقف واختيارات -->
+      <div class="card p-4">
+        <h3 class="text-lg font-bold mb-2">اختاري التصرف الأرفق</h3>
+        <p class="text-sm text-slate-600 mb-3">اقرئي الموقف، ثم اختاري الإجابة الأقرب للرفق.</p>
+        <div id="scenarioBox" class="space-y-3"></div>
+        <div class="mt-3 flex items-center gap-3">
+          <button class="pill" onclick="nextScenario()">➡️ الموقف التالي</button>
+          <button class="pill" onclick="restartScenarios()">🔄 إعادة</button>
+          <span id="scenarioScore" class="badge">النتيجة: 0</span>
+        </div>
+      </div>
+
+      <!-- 3. مقياس الرفق -->
+      <div class="card p-4">
+        <h3 class="text-lg font-bold mb-2">مقياس الرفق (سريع)</h3>
+        <p class="text-sm text-slate-600 mb-3">قيّمي نفسك من 1 (نادرًا) إلى 5 (دائمًا).</p>
+        <form id="kindnessForm" class="space-y-2"></form>
+        <div class="mt-3 flex items-center gap-3">
+          <button class="pill" onclick="calcKindness()">✅ احسبي نتيجتي</button>
+          <span id="kindnessResult" class="badge">لم يُحسب بعد</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- خطة أسبوع الرفق -->
+    <div class="card p-4 mt-4">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <h3 class="text-lg font-bold">خطة أسبوع الرفق</h3>
+        <div class="text-sm text-slate-600">اختاري 3 أهداف ووزّعيها على أيام الأسبوع، ثم اطبعي الخطة.</div>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4 mt-3">
+        <div>
+          <h4 class="font-semibold mb-2">اختاري أهدافك</h4>
+          <div id="goalsList" class="grid grid-cols-1 gap-2"></div>
+        </div>
+        <div class="md:col-span-2">
+          <h4 class="font-semibold mb-2">التوزيع على الأسبوع</h4>
+          <div class="overflow-auto">
+            <table class="w-full text-sm border">
+              <thead class="bg-slate-100">
+                <tr>
+                  <th class="border p-2">اليوم</th>
+                  <th class="border p-2">الهدف</th>
+                  <th class="border p-2">ملاحظة</th>
+                </tr>
+              </thead>
+              <tbody id="planBody"></tbody>
+            </table>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <button class="pill" onclick="buildPlan()">🧩 توليد خطة</button>
+            <button class="pill" onclick="printPlan()">🖨️ طباعة الخطة</button>
+          </div>
+          <div id="planPrint" class="mt-4 p-4 border rounded-xl bg-white">
+            <div class="text-center mb-2">
+              <div class="text-lg font-bold">خطة أسبوع الرفق</div>
+              <div class="text-sm text-slate-600">ستظهر الشعارات والترويسة أعلاه تلقائيًا عند الطباعة.</div>
+            </div>
+            <div id="planPreview" class="text-sm grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parents tab -->
+  <section id="tab-parents" class="mx-auto max-w-6xl mt-4 px-3 md:px-0 hidden">
+    <div class="grid md:grid-cols-2 gap-4">
+      <!-- نصائح سريعة -->
+      <div class="card p-4">
+        <h3 class="text-lg font-bold mb-2">للأسرة: 5 دقائق لزرع الرفق</h3>
+        <ul class="list-disc pr-6 text-slate-700 leading-8">
+          <li>ابدؤوا يومكم بكلمة طيبة، واسألوا: «ما عمل الرفق الذي ستفعلينه اليوم؟»</li>
+          <li>قدّموا نموذجًا عمليًا: تعاطفوا في حواركم أمام الأبناء.</li>
+          <li>ثبّتوا قاعدة: «نستخدم كلمات مهذّبة دائمًا» مع أمثلة.</li>
+          <li>شارِكوا ابنتكم قراءة قصة قصيرة عن اللطف وناقشوها.</li>
+          <li>احتفلوا بسلوك رفيق صغير (ملصق/نجمة/عناق/كلمة شكر).</li>
+        </ul>
+        <div class="mt-3 flex items-center gap-3">
+          <button class="pill" onclick="speak('شكرا لك. كلماتك الطيبة تصنع فرقا كبيرا')">🔊 عبارة تشجيعية</button>
+          <button class="pill" onclick="mark('tips')">✔️ تم الاطلاع</button>
+        </div>
+        <div id="tipsStatus" class="text-emerald-700 text-sm mt-2"></div>
+      </div>
+
+      <!-- موقف للأسرة -->
+      <div class="card p-4">
+        <h3 class="text-lg font-bold mb-2">موقف أسري: ماذا تفعلون؟</h3>
+        <p class="text-sm text-slate-600">اختاروا أفضل تصرّف يعلّم الرفق.</p>
+        <div id="parentScenario" class="space-y-3"></div>
+        <div class="mt-3 flex items-center gap-3">
+          <button class="pill" onclick="nextParentScenario()">➡️ موقف آخر</button>
+          <span id="parentScore" class="badge">النتيجة: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ميثاق الرفق الأسري -->
+    <div class="card p-4 mt-4">
+      <h3 class="text-lg font-bold mb-2">ميثاق الرفق الأسري (قابـل للطباعة)</h3>
+      <div class="grid md:grid-cols-4 gap-3">
+        <input id="cStudent" class="border rounded-lg p-2" placeholder="اسم الطالبة">
+        <input id="cParent" class="border rounded-lg p-2" placeholder="اسم ولي/ولية الأمر">
+        <input id="cDate" class="border rounded-lg p-2" placeholder="التاريخ">
+        <input id="cClass" class="border rounded-lg p-2" placeholder="الصف/الشعبة">
+      </div>
+      <div class="mt-3 flex gap-2">
+        <button class="pill" onclick="makeCharter()">🧾 توليد الميثاق</button>
+        <button class="pill" onclick="printCharter()">🖨️ طباعة</button>
+      </div>
+      <div id="charterArea" class="mt-3 p-4 border rounded-xl bg-white">
+        <div class="text-center mb-2 font-bold">ميثاق الرفق الأسري</div>
+        <div id="charterPreview" class="leading-8 text-slate-700"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Certificate tab -->
+  <section id="tab-certificate" class="mx-auto max-w-6xl mt-4 px-3 md:px-0 hidden">
+    <div class="card p-4">
+      <h3 class="text-lg font-bold mb-3">شهادة «سفيرة الرفق»</h3>
+      <div class="grid md:grid-cols-5 gap-3 items-end">
+        <input id="sName" class="border rounded-lg p-2 md:col-span-2" placeholder="اسم الطالبة">
+        <input id="sClass" class="border rounded-lg p-2" placeholder="الصف/الشعبة">
+        <input id="sDate" class="border rounded-lg p-2" placeholder="التاريخ">
+        <button class="pill md:col-span-1" onclick="buildCertificate()">✨ إنشاء الشهادة</button>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <button class="pill" onclick="printCertificate()">🖨️ طباعة</button>
+        <button class="pill" onclick="mark('certificate')">✔️ حفظ الإنجاز</button>
+      </div>
+      <div id="certArea" class="mt-4 p-5 bg-white border rounded-2xl relative">
+        <div class="absolute inset-x-0 -top-3 text-center">
+          <span class="stamp">سفيرة الرفق</span>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-extrabold mb-1">شهادة تقدير</div>
+          <div class="text-sm text-slate-600 mb-4">تُمنح للطالبة تقديرًا لسلوكها الرفيق والتزامها بنشر اللطف.</div>
+        </div>
+        <div id="certPreview" class="text-center text-lg leading-10"></div>
+        <div class="mt-6 grid grid-cols-2 gap-6 text-sm">
+          <div>
+            <div class="font-semibold">قائدة المدرسة:</div>
+            <div class="h-10 border-b"></div>
+          </div>
+          <div>
+            <div class="font-semibold">المرشدة الطلابية:</div>
+            <div class="h-10 border-b"></div>
+          </div>
+        </div>
+        <div class="mt-6 text-center text-xs text-slate-500">ستظهر بيانات الترويسة والشعارات تلقائيًا أعلى الصفحة.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Progress tab -->
+  <section id="tab-progress" class="mx-auto max-w-6xl mt-4 px-3 md:px-0 hidden">
+    <div class="card p-4">
+      <h3 class="text-lg font-bold mb-2">لوحة التقدّم</h3>
+      <div class="grid md:grid-cols-4 gap-4">
+        <div class="p-4 rounded-xl border">
+          <div class="text-sm text-slate-500">محتوى «ما هو الرفق؟»</div>
+          <div id="p-intro" class="text-xl font-extrabold">❌</div>
+        </div>
+        <div class="p-4 rounded-xl border">
+          <div class="text-sm text-slate-500">مواقف الطالبة</div>
+          <div id="p-scenarios" class="text-xl font-extrabold">0/6</div>
+        </div>
+        <div class="p-4 rounded-xl border">
+          <div class="text-sm text-slate-500">مقياس الرفق</div>
+          <div id="p-scale" class="text-xl font-extrabold">غير مكتمل</div>
+        </div>
+        <div class="p-4 rounded-xl border">
+          <div class="text-sm text-slate-500">شهادة الرفق</div>
+          <div id="p-cert" class="text-xl font-extrabold">❌</div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="font-bold mb-2">الشارات</div>
+        <div id="badges" class="flex flex-wrap gap-2"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mx-auto max-w-6xl px-3 md:px-0 mt-6 mb-10 text-center text-sm text-slate-600">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-2">
+      <div>© <span id="year"></span> — تطبيق الرفق — نسخة مجانية للتعليم.</div>
+      <div>برمجة / فاطمة هزازي</div>
+    </div>
+  </footer>
+
+  <script>
+    // ---------- Helpers & State ----------
+    const $ = (sel)=>document.querySelector(sel);
+    const el = (tag, cls, html)=>{ const E = document.createElement(tag); if(cls) E.className = cls; if(html!==undefined) E.innerHTML = html; return E; };
+
+    const state = JSON.parse(localStorage.getItem('rifq_state')||'{}');
+
+    const defaultState = {
+      intro:false,
+      scenarios:{ idx:0, score:0, done:0 },
+      assessment:{ done:false, score:0 },
+      parents:{ score:0 },
+      certificate:false,
+      badges:[],
+      kleecha:{ rightLogo:'', leftLogo:'', school:'', district:'', ministry:'' }
+    };
+
+    // merge defaults
+    for (const k in defaultState){ if(!(k in state)) state[k] = defaultState[k]; }
+
+    const SCENARIOS = [
+      {
+        t:"رأيتِ زميلة جديدة تجلس وحدها في الفسحة.",
+        a:[
+          {txt:"أجلس معها وأعرّفها بصديقاتي.", score:2, fb:"هذا تصرّف رفيق يبعث الأمان."},
+          {txt:"أنظر ثم أذهب دون كلام.", score:0, fb:"يمكنك فعل ما هو ألطف."},
+          {txt:"أضحك مع صديقاتي على وحدتها.", score:-1, fb:"هذا يؤذي المشاعر ويتعارض مع الرفق."}
+        ]
+      },
+      {
+        t:"أخطأت زميلتك في نطق كلمة أثناء القراءة.",
+        a:[
+          {txt:"أصحّح لها بلطف وأشجّعها.", score:2, fb:"رائعة! تعلّمينها وتدعمينها."},
+          {txt:"أقول أمام الجميع: لا تعرف القراءة!", score:-1, fb:"هذا محرج وغير رفيق."},
+          {txt:"أتجاهلها تمامًا.", score:0, fb:"حاولي المساندة بلطف."}
+        ]
+      },
+      {
+        t:"في الطابور، دفعتك طفلة دون قصد.",
+        a:[
+          {txt:"أهدأ وأسألها بلطف: هل أنت بخير؟", score:2, fb:"تحكّمين مشاعرك وتتحاورين بهدوء."},
+          {txt:"أدفعها بقوّة لأستعيد مكاني.", score:-1, fb:"رد العنف بالعنف ليس من الرفق."},
+          {txt:"أصرخ عليها أمام الجميع.", score:-1, fb:"الصرخ يجرح المشاعر."}
+        ]
+      },
+      {
+        t:"زميلة استعارت قلمك ولم تُعدْه.",
+        a:[
+          {txt:"أذكرها بابتسامة: هل يمكنك إرجاع القلم؟", score:2, fb:"طلب مهذّب يَصون العلاقة."},
+          {txt:"أكتب اسمها في مجموعة الفصل وأشتكيها.", score:0, fb:"يمكن التحدّث أولًا بينكما."},
+          {txt:"أخفي أدواتها ردًا على فعلها.", score:-1, fb:"الانتقام ليس رفقًا."}
+        ]
+      },
+      {
+        t:"معلمة الصف طلبت هدوءًا لشرح مهم.",
+        a:[
+          {txt:"ألتزم الهدوء وأذكّر القريبات مني بلطف.", score:2, fb:"مساندة النظام سلوك رفيق."},
+          {txt:"أستمر بالكلام بصوت منخفض.", score:0, fb:"الالتزام الكامل ألطف."},
+          {txt:"أقلّد صوت المعلمة للضحك.", score:-1, fb:"هذا إساءة وتقليل احترام."}
+        ]
+      },
+      {
+        t:"زميلة وقعت قارورتها وانسكب الماء.",
+        a:[
+          {txt:"أساعد في التنظيف وأواسيها.", score:2, fb:"تعاونك رفق جميل."},
+          {txt:"ألتقط صورًا وأشاركها للضحك.", score:-1, fb:"هذا تنمّر مؤذٍ."},
+          {txt:"أترك المكان سريعًا.", score:0, fb:"المساعدة هنا ألطف."}
+        ]
+      }
+    ];
+
+    const PARENT_SCENARIOS = [
+      {
+        t:"ابنتك عادت حزينة لأن زميلة لم تلعب معها.",
+        a:[
+          {txt:"أستمع أولًا لمشاعرها وأواسيها ثم أقترح حلولًا.", score:2, fb:"الإصغاء والتعاطف يعلّمان الرفق."},
+          {txt:"أقلّل من مشاعرها: هذا أمر تافه!", score:-1, fb:"التقليل يؤذي ويعلّم القسوة."},
+          {txt:"ألومها فورًا دون معرفة التفاصيل.", score:0, fb:"الاستماع أولًا أفضل."}
+        ]
+      },
+      {
+        t:"سمعتُ ابنتك تتحدث بحدة مع أختها.",
+        a:[
+          {txt:"أفصل الموقف بهدوء وأعلّم جملة بديلة مهذّبة.", score:2, fb:"تعليم البدائل يرسّخ الرفق."},
+          {txt:"أصرخ وأعاقب فورًا.", score:-1, fb:"النمذجة الهادئة أقوى أثرًا."},
+          {txt:"أتجاهل؛ ستتعلّم وحدها.", score:0, fb:"التوجيه اللطيف مفيد الآن."}
+        ]
+      }
+    ];
+
+    const GOALS = [
+      "أستخدم كلمات مهذّبة مع الجميع.",
+      "أساعد زميلة واحدة يوميًا في أمر صغير.",
+      "أمتنع عن السخرية وأستبدلها بكلمة طيبة.",
+      "أشارك في تنظيف الفصل بعد الحصة.",
+      "أستأذن قبل الاستعارة أو اللمس.",
+      "أشكر من قدّم لي مساعدة.",
+      "أحافظ على هدوئي عند الغضب وأتنفّس بعمق."
+    ];
+
+    const SCALE = [
+      "أقول كلمات مهذّبة حتى حين أختلف.",
+      "أستمع للآخرين دون مقاطعة.",
+      "أعرض المساعدة لمن يحتاج.",
+      "أضبط صوتي في الأماكن العامة.",
+      "أتفهّم مشاعر زميلاتي.",
+      "أشكر من يساعدني.",
+      "أعتذر عند الخطأ.",
+      "أتجنّب السخرية أو نشر الصور المؤذية."
+    ];
+
+    // ---------- Init ----------
+    function init(){
+      // year
+      $("#year").textContent = new Date().getFullYear();
+
+      // kleecha fields
+      $("#rightLogoUrl").value = state.kleecha.rightLogo || "";
+      $("#leftLogoUrl").value = state.kleecha.leftLogo || "";
+      $("#schoolName").value = state.kleecha.school || "";
+      $("#districtName").value = state.kleecha.district || "";
+      $("#ministryName").value = state.kleecha.ministry || "";
+      applyKleecha(true);
+
+      // intro status
+      updateIntro();
+
+      // scenarios
+      renderScenario();
+      updateScenarioScore();
+
+      // scale form
+      const form = $("#kindnessForm");
+      SCALE.forEach((q,i)=>{
+        const row = el("div","");
+        const label = el("label","block font-medium", (i+1)+". "+q);
+        const choices = el("div","flex gap-2 mt-1");
+        for(let v=1; v<=5; v++){
+          const id = `q${i}_${v}`;
+          const wrap = el("label","inline-flex items-center gap-1 pill");
+          const radio = el("input","",null);
+          radio.type="radio"; radio.name=`q${i}`; radio.value=v; radio.id=id;
+          wrap.appendChild(radio);
+          wrap.appendChild(el("span","text-sm",v));
+          choices.appendChild(wrap);
+        }
+        row.appendChild(label); row.appendChild(choices);
+        form.appendChild(row);
+      });
+
+      // goals
+      const gl = $("#goalsList");
+      GOALS.forEach((g,i)=>{
+        const id="g"+i;
+        const wrap=el("label","flex items-center gap-2");
+        const cb=el("input",""); cb.type="checkbox"; cb.id=id;
+        wrap.appendChild(cb);
+        wrap.appendChild(el("span","",g));
+        gl.appendChild(wrap);
+      });
+
+      // plan body placeholder 7 rows
+      const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+      days.forEach(d=>{
+        const tr=el("tr","");
+        tr.appendChild(el("td","border p-2",d));
+        tr.appendChild(el("td","border p-1",'<input class="w-full p-1 outline-none" placeholder="اختاري هدفًا">'));
+        tr.appendChild(el("td","border p-1",'<input class="w-full p-1 outline-none" placeholder="ملاحظة">'));
+        $("#planBody").appendChild(tr);
+      });
+
+      // parent scenario
+      renderParentScenario();
+
+      // progress
+      refreshProgress();
+    }
+    document.addEventListener("DOMContentLoaded", init);
+
+    // ---------- Kleecha ----------
+    function applyKleecha(skipSave){
+      const r = $("#rightLogoUrl").value.trim();
+      const l = $("#leftLogoUrl").value.trim();
+      const s = $("#schoolName").value.trim();
+      const d = $("#districtName").value.trim();
+      const m = $("#ministryName").value.trim();
+      // set top text
+      $("#schoolTop").textContent = s || "";
+      $("#districtTop").textContent = d || "";
+      $("#ministryTop").textContent = m || "";
+      // set logos
+      const R = $("#rightLogo"), L = $("#leftLogo");
+      if(r){ R.src=r; R.classList.remove("hidden"); } else { R.classList.add("hidden"); }
+      if(l){ L.src=l; L.classList.remove("hidden"); } else { L.classList.add("hidden"); }
+      if(!skipSave){
+        state.kleecha = { rightLogo:r, leftLogo:l, school:s, district:d, ministry:m };
+        saveProgress();
+      }
+    }
+
+    // ---------- Tabs ----------
+    function switchTab(name, btn){
+      // buttons
+      document.querySelectorAll(".tab-btn").forEach(b=>b.setAttribute("aria-selected","false"));
+      btn && btn.setAttribute("aria-selected","true");
+      // sections
+      ["students","parents","certificate","progress"].forEach(id=>{
+        const sec = document.querySelector("#tab-"+id);
+        if(id===name) sec.classList.remove("hidden"); else sec.classList.add("hidden");
+      });
+    }
+
+    // ---------- Intro ----------
+    function mark(key){
+      if(key==="intro"){ state.intro = true; updateIntro(); addBadge("قلب لطيف"); }
+      if(key==="tips"){ addBadge("أسرة داعمة"); }
+      if(key==="certificate"){ state.certificate = true; }
+      saveProgress();
+      refreshProgress();
+    }
+    function updateIntro(){
+      $("#introStatus").textContent = state.intro ? "أحسنتِ! تم الإنجاز." : "";
+      $("#p-intro").textContent = state.intro ? "✔️" : "❌";
+    }
+
+    // ---------- Scenarios (Students) ----------
+    function renderScenario(){
+      const idx = state.scenarios.idx % SCENARIOS.length;
+      const box = $("#scenarioBox");
+      box.innerHTML = "";
+      const s = SCENARIOS[idx];
+      box.appendChild(el("div","font-semibold", "الموقف "+(idx+1)+" / "+SCENARIOS.length));
+      box.appendChild(el("div","p-3 bg-slate-50 rounded-lg", s.t));
+      s.a.forEach((opt, i)=>{
+        const b = el("button","pill", opt.txt);
+        b.onclick = ()=>{
+          state.scenarios.score += opt.score;
+          state.scenarios.done = Math.max(state.scenarios.done, idx+1);
+          $("#scenarioScore").textContent = "النتيجة: "+state.scenarios.score;
+          alert(opt.fb);
+          addBadge(opt.score>0 ? "اختيار رفيق" : (opt.score<0 ? "أعيد التفكير" : "محايدة"));
+          saveProgress(); refreshProgress();
+        };
+        box.appendChild(b);
+      });
+    }
+    function nextScenario(){
+      state.scenarios.idx = (state.scenarios.idx+1) % SCENARIOS.length;
+      renderScenario(); updateScenarioScore(); saveProgress();
+    }
+    function restartScenarios(){
+      state.scenarios = { idx:0, score:0, done:0 };
+      renderScenario(); updateScenarioScore(); saveProgress();
+    }
+    function updateScenarioScore(){
+      $("#scenarioScore").textContent = "النتيجة: "+state.scenarios.score;
+    }
+
+    // ---------- Parent Scenario ----------
+    function renderParentScenario(){
+      const idx = Math.floor(Math.random()*PARENT_SCENARIOS.length);
+      const area = $("#parentScenario");
+      area.innerHTML="";
+      const s = PARENT_SCENARIOS[idx];
+      area.appendChild(el("div","p-3 bg-slate-50 rounded-lg", s.t));
+      s.a.forEach((opt)=>{
+        const b = el("button","pill", opt.txt);
+        b.onclick = ()=>{
+          state.parents.score += opt.score;
+          $("#parentScore").textContent = "النتيجة: "+state.parents.score;
+          alert(opt.fb);
+          addBadge(opt.score>0 ? "قدوة هادئة" : (opt.score<0 ? "نراجع الأسلوب" : "محايد"));
+          saveProgress(); refreshProgress();
+        };
+        area.appendChild(b);
+      });
+    }
+    function nextParentScenario(){ renderParentScenario(); }
+
+    // ---------- Kindness Scale ----------
+    function calcKindness(){
+      let total=0, count=0;
+      SCALE.forEach((q,i)=>{
+        const v = document.querySelector('input[name="q'+i+'"]:checked');
+        if(v){ total += Number(v.value); count++; }
+      });
+      if(count< SCALE_LEN()){ alert("رجاءً جاوبي على جميع العبارات."); return; }
+      const score = Math.round((total/(5*SCALE_LEN()))*100);
+      state.assessment = { done:true, score };
+      $("#kindnessResult").textContent = "نتيجتك: "+score+"%";
+      addBadge(score>=80 ? "سفيرة الرفق" : (score>=60 ? "محبة للرفق" : "أحتاج تدريبًا"));
+      saveProgress(); refreshProgress();
+    }
+    function SCALE_LEN(){ return SCALE.length; }
+
+    // ---------- Plan ----------
+    function buildPlan(){
+      const selected = [];
+      GOALS.forEach((g,i)=>{
+        const cb = $("#g"+i);
+        if(cb && cb.checked) selected.push(g);
+      });
+      if(selected.length===0){ alert("اختاري 1-3 أهداف."); return; }
+      const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+      const prev = $("#planPreview"); prev.innerHTML="";
+      days.forEach((d, i)=>{
+        const card = el("div","p-3 border rounded-lg");
+        card.innerHTML = "<div class='font-semibold mb-1'>"+d+"</div>"+
+          "<div>"+(selected[i%selected.length] || selected[0])+"</div>";
+        prev.appendChild(card);
+      });
+      addBadge("مخططة أسبوع الرفق");
+      saveProgress(); refreshProgress();
+    }
+    function printPlan(){ printArea("#planPrint"); }
+
+    // ---------- Charter ----------
+    function makeCharter(){
+      const s = $("#cStudent").value || "........";
+      const p = $("#cParent").value || "........";
+      const d = $("#cDate").value || "........";
+      const c = $("#cClass").value || "........";
+      const pr = $("#charterPreview");
+      pr.innerHTML = `
+        <p>نلتزم نحن أسرة الطالبة <strong>${s}</strong> في الصف <strong>${c}</strong> بأن نغرس قيمة الرفق في بيتنا ومدرستنا.</p>
+        <p>نتعاهد على استخدام كلمات طيبة، والإصغاء باحترام، ومعالجة الخلافات بهدوء.</p>
+        <div class="grid grid-cols-2 gap-6 mt-4 text-sm">
+          <div><div class="font-semibold">ولي/ولية الأمر:</div><div class="h-10 border-b">${p}</div></div>
+          <div><div class="font-semibold">التاريخ:</div><div class="h-10 border-b">${d}</div></div>
+        </div>
+      `;
+    }
+    function printCharter(){ printArea("#charterArea"); }
+
+    // ---------- Certificate ----------
+    function buildCertificate(){
+      const n = $("#sName").value || "اسم الطالبة";
+      const c = $("#sClass").value || "الصف";
+      const d = $("#sDate").value || new Date().toLocaleDateString("ar-SA");
+      $("#certPreview").innerHTML = `
+        <div>تُمنح للطالبة: <strong>${n}</strong></div>
+        <div>الصف/الشعبة: <strong>${c}</strong></div>
+        <div>التاريخ: <strong>${d}</strong></div>
+        <div class="mt-3 text-slate-600">تقديرًا لسلوكها الرفيق ومبادراتها في نشر اللطف بين زميلاتها.</div>
+      `;
+      addBadge("شهادة سفيرة الرفق");
+      state.certificate = true; saveProgress(); refreshProgress();
+    }
+    function printCertificate(){ printArea("#certArea"); }
+
+    // ---------- Print Helper ----------
+    function printArea(selector){
+      const area = document.querySelector(selector) || document.body;
+      const kleechaTop = document.querySelector("header.kleecha").outerHTML;
+      // Only copy critical styles for print (no scripts)
+      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map(s => s.outerHTML).join('\\n');
+      const w = window.open("","_blank");
+      if(!w) return alert("يمنع المتصفح النوافذ المنبثقة. اسمحي بها للطباعة.");
+      w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head>${styles}<title>طباعة</title></head><body>${kleechaTop}${area.outerHTML}</body></html>`);
+      w.document.close();
+      w.focus();
+      w.print();
+    }
+
+    // ---------- Speech ----------
+    function speak(text){
+      try{
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang="ar-SA";
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      }catch(e){ alert("المتصفح لا يدعم القراءة الصوتية."); }
+    }
+
+    // ---------- Badges & Progress ----------
+    function addBadge(name){
+      if(!state.badges.includes(name)) state.badges.push(name);
+    }
+    function refreshProgress(){
+      $("#p-scenarios").textContent = (state.scenarios.done||0)+"/"+SCENARIOS.length;
+      $("#p-scale").textContent = state.assessment.done ? (state.assessment.score+"%") : "غير مكتمل";
+      $("#p-cert").textContent = state.certificate ? "✔️" : "❌";
+      const b = $("#badges"); b.innerHTML="";
+      state.badges.forEach(x=>{
+        const tag=el("span","badge",x);
+        b.appendChild(tag);
+      });
+    }
+    function saveProgress(quiet){
+      localStorage.setItem('rifq_state', JSON.stringify(state));
+      if(!quiet) { console.log("saved"); }
+    }
+    function resetProgress(){
+      if(!confirm("متأكدة من مسح كل التقدّم؟")) return;
+      localStorage.removeItem('rifq_state'); location.reload();
+    }
+
+    // ---------- Dark Mode ----------
+    function toggleDark(){
+      const root = document.documentElement;
+      const dark = root.classList.toggle("dark");
+      if(dark){
+        root.style.colorScheme='dark';
+        document.body.style.background = "linear-gradient(180deg,#0b1220,#0b2630)";
+        document.body.style.color = "#e2e8f0";
+        document.querySelectorAll(".card").forEach(c=>{ c.style.background="#0b2130"; c.style.borderColor="#1f2937"; c.style.color="#e2e8f0"; });
+        document.querySelectorAll(".badge").forEach(c=>{ c.style.borderColor="#0ea5e9"; c.style.color="#e2e8f0"; });
+        document.getElementById("darkIcon").textContent="🌞";
+      }else{
+        root.style.colorScheme='light';
+        document.body.style.background = "linear-gradient(180deg,#f8fafc, #ecfeff)";
+        document.body.style.color = "var(--ink)";
+        document.querySelectorAll(".card").forEach(c=>{ c.style.background="#ffffff"; c.style.borderColor="#e2e8f0"; c.style.color="inherit"; });
+        document.querySelectorAll(".badge").forEach(c=>{ c.style.borderColor="#38bdf8"; c.style.color="inherit"; });
+        document.getElementById("darkIcon").textContent="🌙";
+      }
+    }
+
+    // ---------- Share ----------
+    async function shareURL(){
+      const url = location.href;
+      try{
+        if(navigator.share){
+          await navigator.share({title: document.title, text: "تطبيق الرفق", url});
+        }else if(navigator.clipboard){
+          await navigator.clipboard.writeText(url);
+          alert("تم نسخ رابط التطبيق إلى الحافظة.");
+        }else{
+          prompt("انسخي الرابط:", url);
+        }
+      }catch(e){
+        try{ await navigator.clipboard.writeText(url); alert("تم نسخ رابط التطبيق إلى الحافظة."); }catch(_){}
+      }
+    }
+  </script>
+</body>
+</html>
